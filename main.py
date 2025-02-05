@@ -7,6 +7,7 @@ import os
 import signal
 import logging
 #import pytest
+#testing for PAT
 
 """
 By Todd Dole, Revision 1.2
@@ -17,11 +18,12 @@ Revision History
 1.2 - Bugs fixed and player improved, should no longer forfeit
 """
 
-# TODO - Change the PORT and USER_NAME Values before running
+# doneTODO - Change the PORT and USER_NAME Values before running
 DEBUG = True
-PORT = 8002
-USER_NAME = "jsmith"
+PORT = 10101
+USER_NAME = "rd2109"
 # TODO - change your method of saving information from the very rudimentary method here
+
 hand = [] # list of cards in our hand
 discard = [] # list of cards organized as a stack
 cannot_discard = ""
