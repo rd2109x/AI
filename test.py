@@ -7,11 +7,9 @@ import os
 import signal
 import logging
 #import pytest
-#testing for PAT
 
 """
-By Roh, Revision 1.2
-I worked on the process events and draw function only mostly
+By Todd Dole, Revision 1.2
 Written for Hardin-Simmons CSCI-4332 Artificial Intelligence
 Revision History
 1.0 - API setup
@@ -19,16 +17,14 @@ Revision History
 1.2 - Bugs fixed and player improved, should no longer forfeit
 """
 
-# doneTODO - Change the PORT and USER_NAME Values before running
+# TODO - Change the PORT and USER_NAME Values before running
 DEBUG = True
-PORT = 10101
+PORT = 10102
 USER_NAME = "rd2109"
 # TODO - change your method of saving information from the very rudimentary method here
-
 hand = [] # list of cards in our hand
 discard = [] # list of cards organized as a stack
 cannot_discard = ""
-opponent_hand = []    ## Track the opponent's hand
 
 # set up the FastAPI application
 app = FastAPI()
@@ -74,71 +70,24 @@ async def start_hand(hand_info: HandInfo):
 
 def process_events(event_text):
     ''' Shared function to process event text from various API endpoints '''
+    # TODO - Your code here. Everything from here to end of function
     global hand
     global discard
-    global opponent_hand
-    global opponent_discards  # Track the opponent's discarded cards
-    
-    # Initialize opponent_discards if not already done
-    if 'opponent_discards' not in globals():
-        opponent_discards = []
-
     for event_line in event_text.splitlines():
 
         if ((USER_NAME + " draws") in event_line or (USER_NAME + " takes") in event_line):
-            print("In draw, hand is " + str(hand))
-            print("Drew " + event_line.split(" ")[-1])
+            print("In draw, hand is "+str(hand))
+            print("Drew "+event_line.split(" ")[-1])
             hand.append(event_line.split(" ")[-1])
             hand.sort()
-            print("Hand is now " + str(hand))
-            logging.info("Drew a " + event_line.split(" ")[-1] + ", hand is now: " + str(hand))
-        
-        if "discards" in event_line:  # add a card to discard pile
+            print("Hand is now "+str(hand))
+            logging.info("Drew a "+event_line.split(" ")[-1]+", hand is now: "+str(hand))
+        if ("discards" in event_line):  # add a card to discard pile
             discard.insert(0, event_line.split(" ")[-1])
-            # log the discard only discarded by opponent and not by us
-            if USER_NAME not in event_line:
-                discarded_card = event_line.split(" ")[-1]
-                logging.info("TestDummy1 discarded " + discarded_card)
-                opponent_discards.append(discarded_card)  # track opponent's discarded cards
-                # if opponent discards a card that is in opponent's hand, remove it from opponent's hand
-                if discarded_card in opponent_hand:
-                    opponent_hand.remove(discarded_card)  # remove the card from opponent's hand to keep track of opponent's hand
-                    # log the current opponent's hand
-                    logging.info("TestDummy1's hand is now: " + str(opponent_hand))
-        
-        if "takes" in event_line:  # remove a card from discard pile
-            taken_card = discard.pop(0)
-            # log the take only taken by opponent and not by us and update the opponent's hand only if we are not the one who took the card
-            if USER_NAME not in event_line:         ## If we are the one who took the card, we don't need to update opponent's hand
-                logging.info("TestDummy1 took " + taken_card)
-                opponent_hand.append(taken_card)  # keep track of opponent's hand
-                logging.info("TestDummy1's hand is now: " + str(opponent_hand))
-                #this will help me see if my code is working. In the log, i can see the opponent's hand make sure its updating right
-
+        if ("takes" in event_line): # remove a card from discard pile
+            discard.pop(0)
         if " Ends:" in event_line:
             print(event_line)
-
-    # Analyze opponent's discarded cards to make strategic decisions
-    analyze_opponent_discards()
-
-def analyze_opponent_discards():
-    ''' Analyze the opponent's discarded cards to predict their strategy '''
-    global opponent_discards
-
-    # Example analysis: Check if opponent is discarding high-value cards or specific suits
-    high_value_cards = ["10", "J", "Q", "K", "A"]
-    high_value_discards = [card for card in opponent_discards if card[0] in high_value_cards]
-    if high_value_discards:
-        logging.info("Opponent is discarding high-value cards: " + str(high_value_discards))
-        # Adjust strategy based on analysis, e.g., avoid discarding high-value cards
-
-    # Example analysis: Check for patterns in suits
-    suit_counts = {"H": 0, "D": 0, "C": 0, "S": 0}
-    for card in opponent_discards:
-        suit_counts[card[1]] += 1
-    logging.info("Opponent discard suit counts: " + str(suit_counts))
-    # Adjust strategy based on analysis, e.g., focus on collecting certain suits
-
 
 # data class used to receive data from API POST
 class UpdateInfo(BaseModel):
@@ -151,25 +100,10 @@ async def update_2p_game(update_info: UpdateInfo):
         Game Server calls this endpoint to update player on game status and other players' moves.
         Typically only called at the end of game.
     '''
-    # TODO - Log opponent's moves and update game state for strategic planning
+    # TODO - Your code here - update this section if you want
     process_events(update_info.event)
-    
-    # Log the event to analyze opponent's moves and game state
-    logging.info("Update event: " + update_info.event)
-
-    # Optionally, you can parse the event for additional strategic insights
-    # Example: Identify key events like opponent drawing a specific card, discarding, or melding
-    for event_line in update_info.event.splitlines():
-        if "draws" in event_line and "TestDummy1" in event_line:
-            logging.info("Opponent drew a card")
-        elif "discards" in event_line and "TestDummy1" in event_line:
-            logging.info("Opponent discarded " + event_line.split(" ")[-1])
-        elif "melds" in event_line and "TestDummy1" in event_line:
-            logging.info("Opponent melded " + event_line.split(": ")[-1])
-
     print(update_info.event)
     return {"status": "OK"}
-
 
 @app.post("/draw/")
 async def draw(update_info: UpdateInfo):
